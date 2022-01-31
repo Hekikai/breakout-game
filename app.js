@@ -7,10 +7,10 @@ const boardWidth = 560;
 const boardHeight = 300;
 
 const userStart = [230, 10];
-let [currentLeft, currentBottom] = userStart;
+let [userOffsetLeft, userOffsetBottom] = userStart;
 
-const ballStart = [230, 30];
-let [ballCurrentLeft, ballCurrentBottom] = ballStart;
+const ballStart = [230, 60];
+let [ballOffsetLeft, ballOffsetBottom] = ballStart;
 
 const ballDiameter = 20;
 let xDirection = 2;
@@ -68,21 +68,21 @@ const userInit = () => {
 }
 
 const drawUser = (user) => {
-    user.style.left = currentLeft + 'px';
-    user.style.bottom = currentBottom + 'px';
+    user.style.left = userOffsetLeft + 'px';
+    user.style.bottom = userOffsetBottom + 'px';
 }
 
 const moveUser = (e) => {
     switch (e.key) {
         case 'ArrowLeft':
-            if (currentLeft > 0) {
-                currentLeft -= 10;
+            if (userOffsetLeft > 0) {
+                userOffsetLeft -= 10;
                 drawUser(user);
             }
             break;
         case 'ArrowRight': {
-            if (currentLeft < boardWidth - blockWidth) {
-                currentLeft += 10;
+            if (userOffsetLeft < boardWidth - blockWidth) {
+                userOffsetLeft += 10;
                 drawUser(user);
             }
             break;
@@ -98,26 +98,25 @@ const ballInit = () => {
 }
 
 const drawBall = (ball) => {
-    ball.style.left = ballCurrentLeft + 'px';
-    ball.style.bottom = ballCurrentBottom + 'px';
-    checkForCollisions();
+    ball.style.left = ballOffsetLeft + 'px';
+    ball.style.bottom = ballOffsetBottom + 'px';
 }
 
 const checkForCollisions = () => {
     //check for block collisions
     for (let index = 0; index < blocks.length; index++) {
         if (
-            (ballCurrentLeft > blocks[index].bottomLeft[0] &&
-                ballCurrentLeft < blocks[index].bottomRight[0]) &&
-            ((ballCurrentBottom + ballDiameter) > blocks[index].bottomLeft[1] &&
-                ballCurrentBottom < blocks[index].topLeft[1])
+            (ballOffsetLeft > blocks[index].bottomLeft[0] &&
+                ballOffsetLeft < blocks[index].bottomRight[0]) &&
+            ((ballOffsetBottom + ballDiameter) > blocks[index].bottomLeft[1] &&
+                ballOffsetBottom < blocks[index].topLeft[1])
         ) {
             const allBlocks = Array.from(document.querySelectorAll('.block'));
             allBlocks[index].classList.remove('block');
             blocks.splice(index, 1);
-            changeDirection();
+            changeDirectionBlocks();
             score++;
-            scoreDisplay.textContent = score;
+            scoreDisplay.textContent = String(score);
 
             if (blocks.length === 0) {
                 scoreBlock.textContent = `You win! Your score is ${score}`;
@@ -129,22 +128,22 @@ const checkForCollisions = () => {
 
     //check for user collision
     if (
-        (ballCurrentLeft > currentLeft && ballCurrentLeft < currentLeft + blockWidth) &&
-        (ballCurrentBottom > currentBottom && ballCurrentBottom < currentBottom + blockHeight)
+        (ballOffsetLeft > userOffsetLeft && ballOffsetLeft < userOffsetLeft + blockWidth) &&
+        (ballOffsetBottom > userOffsetBottom && ballOffsetBottom < userOffsetBottom + blockHeight)
     ) {
-        changeDirection();
+        changeDirectionUser();
     }
 
     //check for wall collisions
     if (
-        ballCurrentLeft >= (boardWidth - ballDiameter) ||
-        ballCurrentBottom >= (boardHeight - ballDiameter) ||
-        ballCurrentLeft <= 0) {
-        changeDirection();
+        ballOffsetLeft >= (boardWidth - ballDiameter) ||
+        ballOffsetBottom >= (boardHeight - ballDiameter) ||
+        ballOffsetLeft <= 0) {
+        changeDirectionWalls();
     }
 
     //check for game over
-    if (ballCurrentBottom <= 0) {
+    if (ballOffsetBottom <= 0) {
         clearInterval(timerId);
         scoreBlock.textContent = 'Game is over!';
         document.removeEventListener('keydown', moveUser);
@@ -152,14 +151,15 @@ const checkForCollisions = () => {
 }
 
 const moveBall = () => {
+    ballOffsetLeft += xDirection;
+    ballOffsetBottom += yDirection;
+    checkForCollisions();
     drawBall(ball);
-    ballCurrentLeft += xDirection;
-    ballCurrentBottom += yDirection;
 }
 
-const changeDirection = () => {
+const changeDirectionWalls = () => {
     if (xDirection === 2 && yDirection === 2) {
-        yDirection = -2;
+        xDirection = -2;
         return;
     }
     if (xDirection === 2 && yDirection === -2) {
@@ -167,23 +167,46 @@ const changeDirection = () => {
         return;
     }
     if (xDirection === -2 && yDirection === -2) {
-        yDirection = 2;
+        xDirection = 2;
         return;
     }
     if (xDirection === -2 && yDirection === 2) {
         xDirection = 2;
         return;
     }
-
 }
 
-timerId = setInterval(moveBall, 30);
+const changeDirectionBlocks = () => {
+    if (xDirection === 2 && yDirection === 2) {
+        yDirection = -2;
+        return;
+    }
+    if (xDirection === -2 && yDirection === 2) {
+        yDirection = -2;
+        return;
+    }
+}
+
+const changeDirectionUser = () => {
+    if (xDirection === 2 && yDirection === -2) {
+        yDirection = 2;
+        return;
+    }
+    if (xDirection === -2 && yDirection === -2) {
+        yDirection = 2;
+        return;
+    }
+}
+
 const user = userInit();
 const ball = ballInit();
-drawBall(ball);
 addBlocks();
+drawBall(ball);
+timerId = setInterval(moveBall, 20);
 
 document.addEventListener('keydown', moveUser);
-/*TODO: resolve an issue with direction movement;
-    refactor code and make it more clean;
+
+/*TODO: resolve issue with upper bound (ball's going top);
+ * refactor code;
+ * style it better
  */

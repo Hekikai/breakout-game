@@ -1,5 +1,11 @@
+body {
+    background-color: black;
+}
+
 .scoreBlock {
+    font-size: 24px;
     text-align: center;
+    color: white;
 }
 
 .grid {
@@ -8,9 +14,9 @@
     margin-left: auto;
     margin-right: auto;
     position: absolute;
-    border: 1px solid black;
     height: 300px;
     width: 560px;
+    border: 1px solid white;
 }
 
 .block {
