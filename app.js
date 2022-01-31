@@ -23,6 +23,7 @@ class Ball extends Object {
         grid.append(this.ball);
     }
 
+
     static diameter = 20;
 
     draw() {
@@ -94,20 +95,20 @@ class GameField {
         this.ball = new Ball(230, 60);
         this.blocks = [
             new Block(10, 270),
-            // new Block(120, 270),
-            // new Block(230, 270),
-            // new Block(340, 270),
-            // new Block(450, 270),
-            // new Block(10, 240),
-            // new Block(120, 240),
-            // new Block(230, 240),
-            // new Block(340, 240),
-            // new Block(450, 240),
-            // new Block(10, 210),
-            // new Block(120, 210),
-            // new Block(230, 210),
-            // new Block(340, 210),
-            // new Block(450, 210),
+            new Block(120, 270),
+            new Block(230, 270),
+            new Block(340, 270),
+            new Block(450, 270),
+            new Block(10, 240),
+            new Block(120, 240),
+            new Block(230, 240),
+            new Block(340, 240),
+            new Block(450, 240),
+            new Block(10, 210),
+            new Block(120, 210),
+            new Block(230, 210),
+            new Block(340, 210),
+            new Block(450, 210),
         ];
         document.addEventListener('keydown', this.user.move);
         this.timerId = setInterval(this.renderScene, 20);
