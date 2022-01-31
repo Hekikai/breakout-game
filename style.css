@@ -31,6 +31,9 @@ body {
     width: 100px;
     height: 20px;
     background-color: purple;
+    -webkit-box-shadow: 0 0 34px 9px rgba(229, 6, 255, 0.44);
+    -moz-box-shadow: 0 0 34px 9px rgba(229, 6, 255, 0.44);
+    box-shadow: 0 0 34px 9px rgba(229, 6, 255, 0.44);
 }
 
 .ball {
@@ -39,4 +42,7 @@ body {
     height: 20px;
     border-radius: 10px;
     background-color: red;
+    -webkit-box-shadow: 0 34px 9px rgba(255, 6, 6, 0.94);
+    -moz-box-shadow: 0 0 34px 9px rgba(255, 6, 6, 0.94);
+    box-shadow: 0 0 34px 9px rgba(255, 6, 6, 0.94);
 }
