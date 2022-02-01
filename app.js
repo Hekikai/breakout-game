@@ -1,6 +1,7 @@
 const grid = document.querySelector('.grid');
 const scoreDisplay = document.querySelector('.score');
 const scoreBlock = document.querySelector('.scoreBlock');
+const colors = ['#C1E1DC', '#FFCCAC', '#FFEB94', '#FDD475'];
 
 let xDirection = 2;
 let yDirection = 2;
@@ -171,8 +172,6 @@ class GameField {
     }
 }
 
-const colors = ['#C1E1DC', '#FFCCAC', '#FFEB94', '#FDD475'];
-
 const changeDirectionWalls = () => {
     if (xDirection === 2 && yDirection === 2) {
         xDirection = -2;
@@ -213,6 +212,6 @@ const changeDirectionUser = () => {
         return;
     }
 }
+
 const gameField = new GameField();
 gameField.renderScene();
-
