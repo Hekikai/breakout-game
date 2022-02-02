@@ -1,212 +1,218 @@
-const grid = document.querySelector('.grid');
-const scoreDisplay = document.querySelector('.score');
-const scoreBlock = document.querySelector('.scoreBlock');
-const blockWidth = 100;
-const blockHeight = 20;
-const boardWidth = 560;
-const boardHeight = 300;
+class GameField {
+    constructor() {
+        this.user = new User(230, 10);
+        this.ball = new Ball(230, 30);
+        this.blocks = [
+            new Block(10, 270),
+            new Block(120, 270),
+            new Block(230, 270),
+            new Block(340, 270),
+            new Block(450, 270),
+            new Block(10, 240),
+            new Block(120, 240),
+            new Block(230, 240),
+            new Block(340, 240),
+            new Block(450, 240),
+            new Block(10, 210),
+            new Block(120, 210),
+            new Block(230, 210),
+            new Block(340, 210),
+            new Block(450, 210),
+        ];
+        document.addEventListener('keydown', this.user.move);
+        this.timerId = setInterval(this.renderScene, 20);
+    }
 
-const userStart = [230, 10];
-let [userOffsetLeft, userOffsetBottom] = userStart;
+    static grid = document.querySelector('.grid');
+    static scoreDisplay = document.querySelector('.score');
+    static scoreBlock = document.querySelector('.scoreBlock');
+    static score = 0;
+    static boardWidth = parseInt(getComputedStyle(GameField.grid).width);
+    static boardHeight = parseInt(getComputedStyle(GameField.grid).height);
+    static colors = ['#C1E1DC', '#FFCCAC', '#FFEB94', '#FDD475'];
 
-const ballStart = [230, 60];
-let [ballOffsetLeft, ballOffsetBottom] = ballStart;
+    renderScene = () => {
+        this.ball.move();
+        this.checkForCollision();
+    }
 
-const ballDiameter = 20;
-let xDirection = 2;
-let yDirection = 2;
-let score = 0;
-let timerId = null;
+    checkForCollision = () => {
+        // Check for block collisions
+        for (let index = 0; index < this.blocks.length; index++) {
+            if (
+                (this.ball.offsetLeft > this.blocks[index].bottomLeft[0] &&
+                    this.ball.offsetLeft < this.blocks[index].bottomRight[0]) &&
+                ((this.ball.offsetBottom + Ball.diameter) > this.blocks[index].bottomLeft[1] &&
+                    this.ball.offsetBottom < this.blocks[index].topLeft[1])
+            ) {
+                const allBlocks = Array.from(document.querySelectorAll('.block'));
+                allBlocks[index].classList.remove('block');
+                this.blocks.splice(index, 1);
+                this.changeDirectionBlocks();
+                GameField.scoreDisplay.textContent = String(++GameField.score);
+
+                if (this.blocks.length === 0) {
+                    this.finishGame(`You win! Your score is ${GameField.score}`);
+                }
+            }
+        }
+
+        // Check for user collision
+        if (
+            (this.ball.offsetLeft > this.user.offsetLeft && this.ball.offsetLeft < this.user.offsetLeft + Block.blockWidth) &&
+            (this.ball.offsetBottom > this.user.offsetBottom && this.ball.offsetBottom < this.user.offsetBottom + Block.blockHeight)
+        ) {
+            this.changeDirectionUser();
+        }
+
+        // Check for wall collisions
+        if (
+            this.ball.offsetLeft >= (GameField.boardWidth - Ball.diameter) ||
+            this.ball.offsetBottom >= (GameField.boardHeight - Ball.diameter) ||
+            this.ball.offsetLeft <= 0) {
+            this.changeDirectionWalls();
+        }
+
+        // Check for game over
+        if (this.ball.offsetBottom <= 0) {
+            this.finishGame('Game is over!');
+        }
+    }
+
+    changeDirectionWalls = () => {
+        if (this.ball.moveDirection.x > 0 && this.ball.moveDirection.y > 0) {
+            this.ball.moveDirection.x = -this.ball.moveDirection.x;
+            return;
+        }
+        if (this.ball.moveDirection.x > 0 && this.ball.moveDirection.y < 0) {
+            this.ball.moveDirection.x = -this.ball.moveDirection.x;
+            return;
+        }
+        if (this.ball.moveDirection.x < 0 && this.ball.moveDirection.y < 0) {
+            this.ball.moveDirection.x = -this.ball.moveDirection.x;
+            return;
+        }
+        if (this.ball.moveDirection.x < 0 && this.ball.moveDirection.y > 0) {
+            this.ball.moveDirection.x = -this.ball.moveDirection.x;
+            return;
+        }
+    }
+
+    changeDirectionBlocks = () => {
+        if (this.ball.moveDirection.x > 0 && this.ball.moveDirection.y > 0) {
+            this.ball.moveDirection.y = -this.ball.moveDirection.y;
+            return;
+        }
+        if (this.ball.moveDirection.x < 0 && this.ball.moveDirection.y > 0) {
+            this.ball.moveDirection.y = -this.ball.moveDirection.y;
+            return;
+        }
+    }
+
+    changeDirectionUser = () => {
+        if (this.ball.moveDirection.x > 0 && this.ball.moveDirection.y < 0) {
+            this.ball.moveDirection.y = -this.ball.moveDirection.y;
+            return;
+        }
+        if (this.ball.moveDirection.x < 0 && this.ball.moveDirection.y < 0) {
+            this.ball.moveDirection.y = -this.ball.moveDirection.y;
+            return;
+        }
+    }
+
+    finishGame = (text) => {
+        clearInterval(this.timerId);
+        GameField.scoreBlock.textContent = text;
+        document.removeEventListener('keydown', this.user.move);
+    }
+}
+
+class Vector {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class Unit {
+    constructor(offsetLeft, offsetBottom, styledClass) {
+        this.offsetLeft = offsetLeft;
+        this.offsetBottom = offsetBottom;
+        // this.bottomLeft = new Point(offsetLeft, offsetBottom);
+        this.element = document.createElement('div');
+        this.element.classList.add(styledClass);
+        this.redraw();
+        GameField.grid.append(this.element);
+    }
+
+    redraw = () => {
+        this.element.style.left = this.offsetLeft + 'px';
+        this.element.style.bottom = this.offsetBottom + 'px';
+    }
+}
+
+class Ball extends Unit {
+    constructor(offsetLeft, offsetBottom) {
+        super(offsetLeft, offsetBottom, 'ball');
+        this.moveDirection = new Vector(3, 3);
+    }
+
+    static diameter = 20;
+
+    move = () => {
+        this.offsetLeft += this.moveDirection.x;
+        this.offsetBottom += this.moveDirection.y;
+        this.redraw();
+    }
+}
+
+class User extends Unit {
+    constructor(offsetLeft, offsetBottom) {
+        super(offsetLeft, offsetBottom, 'user');
+    }
+
+    move = (e) => {
+        switch (e.key) {
+            case 'ArrowLeft':
+                if (this.offsetLeft > 0) {
+                    this.offsetLeft -= 10;
+                    this.redraw();
+                }
+                break;
+            case 'ArrowRight': {
+                if (this.offsetLeft < GameField.boardWidth - Block.blockWidth) {
+                    this.offsetLeft += 10;
+                    this.redraw();
+                }
+                break;
+            }
+        }
+    }
+}
 
 class Block {
     constructor(xAxis, yAxis) {
         this.bottomLeft = [xAxis, yAxis];
-        this.bottomRight = [blockWidth + xAxis, yAxis];
-        this.topLeft = [xAxis, blockHeight + yAxis];
-        this.topRight = [xAxis + blockWidth, yAxis + blockHeight];
+        this.bottomRight = [Block.blockWidth + xAxis, yAxis];
+        this.topLeft = [xAxis, Block.blockHeight + yAxis];
+        this.topRight = [xAxis + Block.blockWidth, yAxis + Block.blockHeight];
+        this.block = document.createElement('div');
+        this.block.style.backgroundColor = GameField.colors[Math.floor(Math.random() * GameField.colors.length)];
+        this.block.classList.add('block');
+        this.block.style.left = this.bottomLeft[0] + 'px';
+        this.block.style.bottom = this.bottomLeft[1] + 'px';
+        GameField.grid.append(this.block);
     }
+
+    static blockWidth = 100;
+    static blockHeight = 20;
 }
 
-const blocks = [
-    new Block(10, 270),
-    new Block(120, 270),
-    new Block(230, 270),
-    new Block(340, 270),
-    new Block(450, 270),
-    new Block(10, 240),
-    new Block(120, 240),
-    new Block(230, 240),
-    new Block(340, 240),
-    new Block(450, 240),
-    new Block(10, 210),
-    new Block(120, 210),
-    new Block(230, 210),
-    new Block(340, 210),
-    new Block(450, 210),
-]
-
-const addBlocks = () => {
-    for (let index = 0; index < blocks.length; index++) {
-        const block = document.createElement('div');
-        block.classList.add('block');
-        changeLeftAndBottom(block, index);
-        grid.append(block);
-    }
-}
-
-const changeLeftAndBottom = (element, index) => {
-    element.style.left = blocks[index].bottomLeft[0] + 'px';
-    element.style.bottom = blocks[index].bottomLeft[1] + 'px';
-}
-
-const userInit = () => {
-    const user = document.createElement('div');
-    user.classList.add('user');
-    drawUser(user);
-    grid.append(user);
-    return user;
-}
-
-const drawUser = (user) => {
-    user.style.left = userOffsetLeft + 'px';
-    user.style.bottom = userOffsetBottom + 'px';
-}
-
-const moveUser = (e) => {
-    switch (e.key) {
-        case 'ArrowLeft':
-            if (userOffsetLeft > 0) {
-                userOffsetLeft -= 10;
-                drawUser(user);
-            }
-            break;
-        case 'ArrowRight': {
-            if (userOffsetLeft < boardWidth - blockWidth) {
-                userOffsetLeft += 10;
-                drawUser(user);
-            }
-            break;
-        }
-    }
-}
-
-const ballInit = () => {
-    const ball = document.createElement('div');
-    ball.classList.add('ball');
-    grid.append(ball);
-    return ball;
-}
-
-const drawBall = (ball) => {
-    ball.style.left = ballOffsetLeft + 'px';
-    ball.style.bottom = ballOffsetBottom + 'px';
-}
-
-const checkForCollisions = () => {
-    //check for block collisions
-    for (let index = 0; index < blocks.length; index++) {
-        if (
-            (ballOffsetLeft > blocks[index].bottomLeft[0] &&
-                ballOffsetLeft < blocks[index].bottomRight[0]) &&
-            ((ballOffsetBottom + ballDiameter) > blocks[index].bottomLeft[1] &&
-                ballOffsetBottom < blocks[index].topLeft[1])
-        ) {
-            const allBlocks = Array.from(document.querySelectorAll('.block'));
-            allBlocks[index].classList.remove('block');
-            blocks.splice(index, 1);
-            changeDirectionBlocks();
-            score++;
-            scoreDisplay.textContent = String(score);
-
-            if (blocks.length === 0) {
-                scoreBlock.textContent = `You win! Your score is ${score}`;
-                clearInterval(timerId);
-                document.removeEventListener('keydown', moveUser);
-            }
-        }
-    }
-
-    //check for user collision
-    if (
-        (ballOffsetLeft > userOffsetLeft && ballOffsetLeft < userOffsetLeft + blockWidth) &&
-        (ballOffsetBottom > userOffsetBottom && ballOffsetBottom < userOffsetBottom + blockHeight)
-    ) {
-        changeDirectionUser();
-    }
-
-    //check for wall collisions
-    if (
-        ballOffsetLeft >= (boardWidth - ballDiameter) ||
-        ballOffsetBottom >= (boardHeight - ballDiameter) ||
-        ballOffsetLeft <= 0) {
-        changeDirectionWalls();
-    }
-
-    //check for game over
-    if (ballOffsetBottom <= 0) {
-        clearInterval(timerId);
-        scoreBlock.textContent = 'Game is over!';
-        document.removeEventListener('keydown', moveUser);
-    }
-}
-
-const moveBall = () => {
-    ballOffsetLeft += xDirection;
-    ballOffsetBottom += yDirection;
-    checkForCollisions();
-    drawBall(ball);
-}
-
-const changeDirectionWalls = () => {
-    if (xDirection === 2 && yDirection === 2) {
-        xDirection = -2;
-        return;
-    }
-    if (xDirection === 2 && yDirection === -2) {
-        xDirection = -2;
-        return;
-    }
-    if (xDirection === -2 && yDirection === -2) {
-        xDirection = 2;
-        return;
-    }
-    if (xDirection === -2 && yDirection === 2) {
-        xDirection = 2;
-        return;
-    }
-}
-
-const changeDirectionBlocks = () => {
-    if (xDirection === 2 && yDirection === 2) {
-        yDirection = -2;
-        return;
-    }
-    if (xDirection === -2 && yDirection === 2) {
-        yDirection = -2;
-        return;
-    }
-}
-
-const changeDirectionUser = () => {
-    if (xDirection === 2 && yDirection === -2) {
-        yDirection = 2;
-        return;
-    }
-    if (xDirection === -2 && yDirection === -2) {
-        yDirection = 2;
-        return;
-    }
-}
-
-const user = userInit();
-const ball = ballInit();
-addBlocks();
-drawBall(ball);
-timerId = setInterval(moveBall, 20);
-
-document.addEventListener('keydown', moveUser);
-
-/*TODO: resolve issue with upper bound (ball's going top);
- * refactor code;
- * style it better
- */
+const gameField = new GameField();
+gameField.renderScene();
+/*TODO: разобраться с коллизией с блоками (дописать условия)
+ * разобраться с верхней стенкой (поменять проверку с offsetBottom)
+ * енум для кнопок со сложностью
+ * динамическая генерация блоков
+*/
+// class Block extends Unit
