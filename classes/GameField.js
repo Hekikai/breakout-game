@@ -6,7 +6,6 @@ export default class GameField {
 		this.user = user;
 		this.ball = ball;
 		this.blocks = [...blocks];
-		document.addEventListener('keydown', this.resetGame);
 		document.addEventListener('keydown', this.user.move);
 		this.timerId = setInterval(this.renderScene, 20);
 	}
@@ -67,7 +66,7 @@ export default class GameField {
 
 		// Check for game over
 		if (this.ball.offsetBottom <= 0) {
-			this.finishGame('Game is over! Press "Space" to reset game!');
+			this.finishGame('Game is over! Press "F5" to reset game!');
 		}
 	}
 
@@ -121,19 +120,6 @@ export default class GameField {
 			return;
 		}
 	}
-
-	resetGame = (e) => {
-		if (e.code === "Space") {
-			clearInterval(this.timerId);
-			this.ball.element.remove();
-			this.user.element.remove();
-
-			this.ball = new Ball(230, 30);
-			this.timerId = setInterval(this.renderScene, 20);
-			document.addEventListener('keydown', this.user.move);
-		}
-	}
-
 
 	finishGame = (text) => {
 		clearInterval(this.timerId);
